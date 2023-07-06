@@ -9,6 +9,7 @@ dotenv.config();
 app.use(cors());
 
 const PORT = process.env.PORT || 8080;
+const SECRET = process.env.SECRET;
 
 function hexToHSL(hexCode) {
     const trimedHexCode = hexCode.replace("#", "");
@@ -76,11 +77,11 @@ const getRGBPercentage = (hexCode) => {
     const blueValue = parseInt(trimedHexCode.substring(4, 6), 16);
 
     return {
-        red: Math.round((redValue / 255) * 100),
-        green: Math.round((greenValue / 255) * 100),
-        blue: Math.round((blueValue / 255) * 100),
-    };
-};
+        red: Math.round((redValue/255)*100),
+        green: Math.round((greenValue/255)*100),
+        blue: Math.round((blueValue/255)*100)
+    }
+}
 
 function isColorDarkOrLight(hexCode) {
     hexCode = hexCode.toLowerCase();
@@ -105,17 +106,24 @@ const genrateColorCode = () => {
         .padStart(6, "0")}`;
 };
 
-app.get("/", (res) => {
-    const newColor = genrateColorCode();
-    const hslValue = hexToHSL(newColor);
-    res.json({
-        colorCode: newColor,
-        colorTheme: isColorDarkOrLight(newColor),
-        hue: hslValue.hue,
-        saturation: hslValue.saturation,
-        luminance: hslValue.luminance,
-        rgbPercentage: getRGBPercentage(newColor),
-    });
+app.get("/:secret", (req, res) => {
+    const { secret } = req.params;
+    if (secret !== SECRET) {
+        res.json({
+            message: "You are not Authorized!",
+        });
+    } else {
+        const newColor = genrateColorCode();
+        const hslValue = hexToHSL(newColor);
+        res.json({
+            colorCode: newColor,
+            colorTheme: isColorDarkOrLight(newColor),
+            hue: hslValue.hue,
+            saturation: hslValue.saturation,
+            luminance: hslValue.luminance,
+            rgbPercentage: getRGBPercentage(newColor)
+        });
+    }
 });
 
 app.listen(PORT, () => {
